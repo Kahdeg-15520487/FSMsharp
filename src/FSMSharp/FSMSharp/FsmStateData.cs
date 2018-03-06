@@ -17,18 +17,6 @@
 		/// Gets the current state.
 		/// </summary>
 		public T State { get; internal set; }
-		/// <summary>
-		/// Gets the state "age"
-		/// </summary>
-		public float StateTime { get; internal set; }
-		/// <summary>
-		/// Gets the absolute time.
-		/// </summary>
-		public float AbsoluteTime { get; internal set; }
-		/// <summary>
-		/// Gets the state progress (available only if an expiration time has been set on the behaviour)
-		/// </summary>
-		public float StateProgress { get; internal set; }
 
 		/// <summary>
 		/// Shortcut for Machine.Next();

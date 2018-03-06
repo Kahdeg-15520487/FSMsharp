@@ -15,7 +15,6 @@ namespace FSMSharp
         Dictionary<T, FsmStateBehaviour<T>> m_StateBehaviours = new Dictionary<T, FsmStateBehaviour<T>>();
         T m_CurrentState = default(T);
         FsmStateBehaviour<T> m_CurrentStateBehaviour;
-        float m_StateAge = -1f;
         string m_FsmName = null;
 
         /// <summary>
@@ -63,43 +62,26 @@ namespace FSMSharp
         /// <summary>
         /// Processes the logic for the FSM. 
         /// </summary>
-        /// <param name="time">The time, expressed in seconds.</param>
         /// <exception cref="InvalidOperationException"></exception>
-        public void Process(float time)
+        public void Process()
         {
-            if (m_StateAge < 0f)
-                m_StateAge = time;
-
-            float totalTime = time;
-            float stateTime = (totalTime - m_StateAge);
-            float stateProgress = 0f;
-
             if (m_CurrentStateBehaviour == null)
             {
                 throw new InvalidOperationException(string.Format("[FSM {0}] : Can't call 'Process' before setting the starting state.", m_FsmName));
-            }
-
-            if (m_CurrentStateBehaviour.Duration.HasValue)
-            {
-                stateProgress = Math.Max(0f, Math.Min(1f, stateTime / m_CurrentStateBehaviour.Duration.Value));
             }
 
             var data = new FsmStateData<T>()
             {
                 Machine = this,
                 Behaviour = m_CurrentStateBehaviour,
-                State = m_CurrentState,
-                StateTime = stateTime,
-                AbsoluteTime = totalTime,
-                StateProgress = stateProgress
+                State = m_CurrentState
             };
 
             m_CurrentStateBehaviour.Trigger(data);
 
-            if (stateProgress >= 1f && m_CurrentStateBehaviour.NextStateSelector != null)
+            if (m_CurrentStateBehaviour.ExpireChecker() && m_CurrentStateBehaviour.NextStateSelector != null)
             {
                 CurrentState = m_CurrentStateBehaviour.NextStateSelector();
-                m_StateAge = time;
             }
         }
 
@@ -114,8 +96,6 @@ namespace FSMSharp
                 DebugLogHandler?.Invoke(string.Format("[FSM {0}] : Changing state from {1} to {2}", m_FsmName, m_CurrentState, value));
 
                 m_CurrentStateBehaviour?.TriggerLeave();
-
-                m_StateAge = -1f;
 
                 m_CurrentStateBehaviour = m_StateBehaviours[value];
                 m_CurrentState = value;
@@ -143,7 +123,7 @@ namespace FSMSharp
         /// <returns>The snapshot.</returns>
         public FsmSnapshot<T> SaveSnapshot()
         {
-            return new FsmSnapshot<T>(m_StateAge, m_CurrentState);
+            return new FsmSnapshot<T>(m_CurrentState);
         }
 
         /// <summary>
@@ -153,7 +133,6 @@ namespace FSMSharp
         public void RestoreSnapshot(FsmSnapshot<T> snap)
         {
             CurrentState = snap.CurrentState;
-            m_StateAge = snap.StateAge;
         }
     }
 

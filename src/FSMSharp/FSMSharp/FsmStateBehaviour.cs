@@ -28,19 +28,15 @@ namespace FSMSharp
 		public T State { get; private set; }
 
 		/// <summary>
-		/// Gets the time duration of the state (if any)
-		/// </summary>
-		public float? Duration { get; private set; }
-
-		/// <summary>
 		/// Gets the function which will be used to select the next state when this expires or Next() gets called.
 		/// </summary>
 		public Func<T> NextStateSelector { get; private set; }
+        public Func<bool> ExpireChecker { get; private set; }
 
-		/// <summary>
-		/// Sets a callback which will be called when the FSM enters in this state
-		/// </summary>
-		public FsmStateBehaviour<T> OnEnter(Action callback)
+        /// <summary>
+        /// Sets a callback which will be called when the FSM enters in this state
+        /// </summary>
+        public FsmStateBehaviour<T> OnEnter(Action callback)
 		{
 			m_EnterCallbacks.Add(callback);
 			return this;
@@ -67,9 +63,9 @@ namespace FSMSharp
 		/// <summary>
 		/// Sets the state to automatically expire after the given time (in seconds)
 		/// </summary>
-		public FsmStateBehaviour<T> Expires(float duration)
+		public FsmStateBehaviour<T> Expires(Func<bool> expireChecker)
 		{
-			Duration = duration;
+            ExpireChecker = expireChecker;
 			return this;
 		}
 
